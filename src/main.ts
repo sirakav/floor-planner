@@ -186,6 +186,130 @@ const CATALOG: Record<string, CatalogEntry> = {
     name: 'Desk', category: 'furniture', w: 1.2, h: 0.6, color: '#b0a080', stroke: '#807050',
     draw: (ctx, w, h, color, stroke) => drawRoundedRect(ctx, w, h, color, stroke, 0.03),
   },
+  l_shaped_sofa: {
+    name: 'L-Sofa', category: 'furniture', w: 2.2, h: 2.0, color: '#d4c8b0', stroke: '#9a8a6a',
+    draw(ctx, w, h, color, stroke) {
+      const depth = 0.8
+      const bw = depth * 0.35 // backrest thickness
+
+      // Left backrest
+      drawRoundedRect(ctx, bw, h, color, stroke, 0.05)
+      // Top backrest
+      ctx.save()
+      ctx.translate(bw, 0)
+      drawRoundedRect(ctx, w - bw, bw, color, stroke, 0.05)
+      ctx.restore()
+
+      // Corner seat
+      ctx.save()
+      ctx.translate(bw, bw)
+      drawRoundedRect(ctx, depth - bw, depth - bw, color, stroke, 0.05)
+      ctx.restore()
+
+      // Bottom seat
+      ctx.save()
+      ctx.translate(bw, depth)
+      drawRoundedRect(ctx, depth - bw, h - depth, color, stroke, 0.05)
+      ctx.restore()
+
+      // Right seat
+      ctx.save()
+      ctx.translate(depth, bw)
+      drawRoundedRect(ctx, w - depth, depth - bw, color, stroke, 0.05)
+      ctx.restore()
+
+      // Armrests
+      ctx.fillStyle = stroke
+      ctx.fillRect(w - 0.12, depth * 0.3, 0.12, depth * 0.7)
+      ctx.fillRect(depth * 0.3, h - 0.12, depth * 0.7, 0.12)
+    },
+  },
+  tv: {
+    name: 'TV', category: 'furniture', w: 1.2, h: 0.1, color: '#1a1a1a', stroke: '#000000',
+    draw(ctx, w, h, color, stroke) {
+      ctx.fillStyle = color
+      ctx.strokeStyle = stroke
+      ctx.lineWidth = 0.02
+      ctx.beginPath()
+      ctx.roundRect(0, 0, w, h, 0.02)
+      ctx.fill()
+      ctx.stroke()
+      // Screen area
+      ctx.fillStyle = '#2a2a2a'
+      ctx.beginPath()
+      ctx.roundRect(0.02, 0.02, w - 0.04, h - 0.04, 0.01)
+      ctx.fill()
+    },
+  },
+  tv_stand: {
+    name: 'TV Stand', category: 'furniture', w: 1.5, h: 0.4, color: '#4a4a4a', stroke: '#2a2a2a',
+    draw(ctx, w, h, color, stroke) {
+      drawRect(ctx, w, h, color, stroke)
+      // TV base
+      ctx.fillStyle = '#0a0a0a'
+      ctx.fillRect(w / 2 - 0.15, h * 0.25, 0.3, 0.05)
+      // TV
+      ctx.fillStyle = '#1a1a1a'
+      ctx.strokeStyle = '#000000'
+      ctx.lineWidth = 0.02
+      ctx.beginPath()
+      ctx.roundRect(0.1, h * 0.1, w - 0.2, 0.05, 0.02)
+      ctx.fill()
+      ctx.stroke()
+    },
+  },
+  armchair: {
+    name: 'Armchair', category: 'furniture', w: 0.8, h: 0.8, color: '#d4c8b0', stroke: '#9a8a6a',
+    draw(ctx, w, h, color, stroke) {
+      // back
+      drawRoundedRect(ctx, w, h * 0.35, color, stroke, 0.05)
+      // seat
+      ctx.save()
+      ctx.translate(0, h * 0.35)
+      drawRoundedRect(ctx, w, h * 0.65, color, stroke, 0.05)
+      ctx.restore()
+      // armrests
+      ctx.fillStyle = stroke
+      ctx.fillRect(0, h * 0.2, 0.15, h * 0.8)
+      ctx.fillRect(w - 0.15, h * 0.2, 0.15, h * 0.8)
+    },
+  },
+  coffee_table: {
+    name: 'Coffee Table', category: 'furniture', w: 0.9, h: 0.5, color: '#c8b898', stroke: '#9a8a6a',
+    draw(ctx, w, h, color, stroke) {
+      ctx.beginPath()
+      ctx.ellipse(w / 2, h / 2, w / 2, h / 2, 0, 0, Math.PI * 2)
+      ctx.fillStyle = color
+      ctx.fill()
+      ctx.strokeStyle = stroke
+      ctx.lineWidth = 0.02
+      ctx.stroke()
+    },
+  },
+  bookcase: {
+    name: 'Bookcase', category: 'furniture', w: 1.2, h: 0.4, color: '#8a6a4a', stroke: '#5a3a1a',
+    draw(ctx, w, h, color, stroke) {
+      drawRect(ctx, w, h, color, stroke)
+      // Shelves vertical lines
+      ctx.strokeStyle = stroke
+      ctx.lineWidth = 0.02
+      for (let i = 1; i < 4; i++) {
+        ctx.beginPath()
+        ctx.moveTo(w * i / 4, 0)
+        ctx.lineTo(w * i / 4, h)
+        ctx.stroke()
+      }
+      // Some books
+      ctx.fillStyle = '#a83232'
+      ctx.fillRect(0.1, 0.05, 0.15, h - 0.1)
+      ctx.fillStyle = '#32a852'
+      ctx.fillRect(0.4, 0.05, 0.1, h - 0.1)
+      ctx.fillStyle = '#3252a8'
+      ctx.fillRect(0.8, 0.05, 0.2, h - 0.1)
+      ctx.fillStyle = '#d4c8b0'
+      ctx.fillRect(0.95, 0.05, 0.05, h - 0.1)
+    },
+  },
   toilet: {
     name: 'Toilet', category: 'fixtures', w: 0.45, h: 0.7, color: '#e8f0f4', stroke: '#5090a8',
     draw(ctx, w, h, color, stroke) {
@@ -261,6 +385,143 @@ const CATALOG: Record<string, CatalogEntry> = {
   kitchen_counter: {
     name: 'Counter', category: 'fixtures', w: 2.0, h: 0.6, color: '#bce8b0', stroke: '#70a860',
     draw: drawRect,
+  },
+  kitchen_island: {
+    name: 'Island', category: 'fixtures', w: 1.8, h: 0.9, color: '#e8e8e8', stroke: '#8a8a8a',
+    draw(ctx, w, h, color, stroke) {
+      drawRect(ctx, w, h, color, stroke)
+      // Stovetop overlay
+      ctx.fillStyle = '#2a2a2a'
+      ctx.beginPath()
+      ctx.roundRect(0.2, 0.2, 0.6, 0.5, 0.05)
+      ctx.fill()
+      // Burners
+      ctx.strokeStyle = '#ea5a5a'
+      ctx.lineWidth = 0.015
+      const burners = [[0.35, 0.45], [0.65, 0.45]]
+      for (const [bx, by] of burners) {
+        ctx.beginPath()
+        ctx.arc(bx, by, 0.1, 0, Math.PI * 2)
+        ctx.stroke()
+      }
+    },
+  },
+  washer: {
+    name: 'Washer', category: 'fixtures', w: 0.6, h: 0.6, color: '#f0f0f0', stroke: '#c0c0c0',
+    draw(ctx, w, h, color, stroke) {
+      drawRect(ctx, w, h, color, stroke)
+      // Top panel
+      ctx.fillStyle = '#e0e0e0'
+      ctx.fillRect(0, 0, w, h * 0.2)
+      ctx.strokeStyle = stroke
+      ctx.strokeRect(0, 0, w, h * 0.2)
+      // Drum
+      ctx.beginPath()
+      ctx.arc(w / 2, h * 0.6, w * 0.25, 0, Math.PI * 2)
+      ctx.fillStyle = '#d0d0d0'
+      ctx.fill()
+      ctx.lineWidth = 0.02
+      ctx.stroke()
+      // Drum inner
+      ctx.beginPath()
+      ctx.arc(w / 2, h * 0.6, w * 0.2, 0, Math.PI * 2)
+      ctx.fillStyle = '#2a2a2a'
+      ctx.fill()
+    },
+  },
+  fridge: {
+    name: 'Fridge', category: 'fixtures', w: 0.8, h: 0.6, color: '#f5f5f5', stroke: '#d0d0d0',
+    draw(ctx, w, h, color, stroke) {
+      drawRect(ctx, w, h, color, stroke)
+      // Left door
+      ctx.strokeStyle = stroke
+      ctx.lineWidth = 0.02
+      ctx.beginPath()
+      ctx.moveTo(w / 2, 0)
+      ctx.lineTo(w / 2, h)
+      ctx.stroke()
+      // Handles
+      ctx.fillStyle = '#b0b0b0'
+      ctx.fillRect(w / 2 - 0.06, h * 0.4, 0.02, h * 0.2)
+      ctx.fillRect(w / 2 + 0.04, h * 0.4, 0.02, h * 0.2)
+    },
+  },
+  stove: {
+    name: 'Stove', category: 'fixtures', w: 0.6, h: 0.6, color: '#e8e8e8', stroke: '#a0a0a0',
+    draw(ctx, w, h, color, stroke) {
+      drawRect(ctx, w, h, color, stroke)
+      // Control panel
+      ctx.fillStyle = '#3a3a3a'
+      ctx.fillRect(0, 0, w, h * 0.15)
+      // Burners
+      ctx.strokeStyle = '#ea5a5a'
+      ctx.lineWidth = 0.015
+      const burners = [[w * 0.25, h * 0.35], [w * 0.75, h * 0.35], [w * 0.25, h * 0.75], [w * 0.75, h * 0.75]]
+      for (const [bx, by] of burners) {
+        ctx.beginPath()
+        ctx.arc(bx, by, 0.12, 0, Math.PI * 2)
+        ctx.stroke()
+        ctx.beginPath()
+        ctx.arc(bx, by, 0.05, 0, Math.PI * 2)
+        ctx.fillStyle = 'rgba(234, 90, 90, 0.2)'
+        ctx.fill()
+      }
+    },
+  },
+  oven_tower: {
+    name: 'Oven', category: 'fixtures', w: 0.6, h: 0.6, color: '#404040', stroke: '#202020',
+    draw(ctx, w, h, color, stroke) {
+      drawRect(ctx, w, h, color, stroke)
+      // Oven door
+      ctx.fillStyle = '#1a1a1a'
+      ctx.beginPath()
+      ctx.roundRect(0.05, 0.05, w - 0.1, h * 0.6, 0.02)
+      ctx.fill()
+      ctx.strokeStyle = '#505050'
+      ctx.lineWidth = 0.02
+      ctx.stroke()
+      // Handle
+      ctx.fillStyle = '#b0b0b0'
+      ctx.fillRect(0.1, 0.1, w - 0.2, 0.04)
+      // Controls
+      ctx.fillStyle = '#606060'
+      ctx.fillRect(0.05, h * 0.7, w - 0.1, h * 0.25)
+      ctx.fillStyle = '#202020'
+      ctx.beginPath()
+      ctx.arc(w * 0.2, h * 0.825, 0.04, 0, Math.PI * 2)
+      ctx.arc(w * 0.8, h * 0.825, 0.04, 0, Math.PI * 2)
+      ctx.fill()
+    },
+  },
+  kitchen_sink: {
+    name: 'Kit. Sink', category: 'fixtures', w: 0.8, h: 0.5, color: '#e8e8e8', stroke: '#a0a0a0',
+    draw(ctx, w, h, color, stroke) {
+      drawRect(ctx, w, h, color, stroke)
+      // Left bowl
+      ctx.fillStyle = '#d0d4d8'
+      ctx.strokeStyle = stroke
+      ctx.lineWidth = 0.015
+      ctx.beginPath()
+      ctx.roundRect(0.05, 0.15, w * 0.4, h - 0.2, 0.05)
+      ctx.fill()
+      ctx.stroke()
+      // Right bowl
+      ctx.beginPath()
+      ctx.roundRect(w * 0.55, 0.15, w * 0.4, h - 0.2, 0.05)
+      ctx.fill()
+      ctx.stroke()
+      // Faucet base & spout
+      ctx.fillStyle = '#a0a0a0'
+      ctx.beginPath()
+      ctx.arc(w / 2, 0.08, 0.04, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.strokeStyle = '#a0a0a0'
+      ctx.lineWidth = 0.02
+      ctx.beginPath()
+      ctx.moveTo(w / 2, 0.08)
+      ctx.lineTo(w / 2, 0.2)
+      ctx.stroke()
+    },
   },
   plant: {
     name: 'Plant', category: 'other', w: 0.4, h: 0.4, color: '#70b048', stroke: '#408020',
