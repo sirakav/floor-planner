@@ -50,6 +50,17 @@ function drawRoundedRect(ctx: CanvasRenderingContext2D, w: number, h: number, co
 }
 
 const CATALOG: Record<string, CatalogEntry> = {
+  room: {
+    name: 'Room', category: 'structural', w: 3, h: 3, color: '#2c3e50', stroke: '#1a252f',
+    draw(ctx, w, h, color, _stroke) {
+      const t = 0.2
+      ctx.fillStyle = color
+      ctx.fillRect(0, 0, w, t)
+      ctx.fillRect(0, h - t, w, t)
+      ctx.fillRect(0, t, t, h - 2 * t)
+      ctx.fillRect(w - t, t, t, h - 2 * t)
+    },
+  },
   wall: {
     name: 'Wall', category: 'structural', w: 2, h: 0.2, color: '#2c3e50', stroke: '#1a252f',
     draw: drawRect,
@@ -565,7 +576,7 @@ const CATALOG: Record<string, CatalogEntry> = {
 // ─── Default plan from JSON ────────────────────────────────────────────────
 async function loadDefaultPlan() {
   try {
-    const response = await fetch('/floor-plan-1773587553711.json')
+    const response = await fetch('floor-plan-1773587553711.json')
     if (!response.ok) throw new Error('Failed to load default plan')
     const data = await response.json() as FloorPlan
     plan = data
@@ -582,7 +593,7 @@ async function loadDefaultPlan() {
 
 
 // ─── State ──────────────────────────────────────────────────────────────────
-let plan: FloorPlan = { gridSize: 0.5, elements: [] }
+let plan: FloorPlan = { gridSize: 0.1, elements: [] }
 let selected: FloorElement | null = null
 let clipboard: FloorElement | null = null
 let placingType: string | null = null
@@ -610,6 +621,8 @@ let dragStartEl: { x: number; y: number; w: number; h: number } = { x: 0, y: 0, 
 let isPanning = false
 let panStart: [number, number] = [0, 0]
 let panStartOffset: [number, number] = [0, 0]
+let isDrawingRoom = false
+let drawRoomStart: [number, number] | null = null
 
 // ─── DOM refs ───────────────────────────────────────────────────────────────
 const canvas = document.getElementById('editor-canvas') as HTMLCanvasElement
@@ -977,7 +990,30 @@ function render() {
   }
 
   // Placing preview at cursor
-  if (placingType && lastMouseScreen) {
+  if (isDrawingRoom && drawRoomStart && lastMouseScreen) {
+    const [wx, wy] = screenToWorld(lastMouseScreen[0], lastMouseScreen[1])
+    const endWx = snapEnabled ? snap(wx) : wx
+    const endWy = snapEnabled ? snap(wy) : wy
+    const minX = Math.min(drawRoomStart[0], endWx)
+    const minY = Math.min(drawRoomStart[1], endWy)
+    const w = Math.abs(endWx - drawRoomStart[0])
+    const h = Math.abs(endWy - drawRoomStart[1])
+
+    if (w > 0 && h > 0) {
+      ctx.save()
+      const [scrX, scrY] = worldToScreen(minX, minY)
+      ctx.translate(scrX, scrY)
+      ctx.scale(scale, scale)
+      ctx.globalAlpha = 0.4
+      const t = 0.2
+      ctx.fillStyle = '#2c3e50'
+      ctx.fillRect(0, 0, w, t)
+      ctx.fillRect(0, h - t, w, t)
+      ctx.fillRect(0, t, t, h - 2 * t)
+      ctx.fillRect(w - t, t, t, h - 2 * t)
+      ctx.restore()
+    }
+  } else if (placingType && placingType !== 'room' && lastMouseScreen) {
     const cat = CATALOG[placingType]
     if (cat) {
       const [wx, wy] = screenToWorld(lastMouseScreen[0], lastMouseScreen[1])
@@ -1308,6 +1344,12 @@ function onMouseDown(e: MouseEvent) {
 
   // Placing mode
   if (placingType) {
+    if (placingType === 'room') {
+      isDrawingRoom = true
+      drawRoomStart = [snapEnabled ? snap(wx) : wx, snapEnabled ? snap(wy) : wy]
+      return
+    }
+
     const cat = CATALOG[placingType]
     if (!cat) return
     const rawX = wx - cat.w / 2
@@ -1388,6 +1430,11 @@ function onMouseMove(e: MouseEvent) {
   if (isPanning) {
     panX = panStartOffset[0] + (e.clientX - panStart[0])
     panY = panStartOffset[1] + (e.clientY - panStart[1])
+    render()
+    return
+  }
+
+  if (isDrawingRoom) {
     render()
     return
   }
@@ -1644,12 +1691,60 @@ function onMouseMove(e: MouseEvent) {
   }
 }
 
-function onMouseUp(_e: MouseEvent) {
+function onMouseUp(e: MouseEvent) {
   if (isPanning) {
     isPanning = false
     canvas.style.cursor = placingType ? 'copy' : 'crosshair'
     return
   }
+  
+  if (isDrawingRoom && drawRoomStart) {
+    const rect = canvas.getBoundingClientRect()
+    const sx = e.clientX - rect.left
+    const sy = e.clientY - rect.top
+    const [wx, wy] = screenToWorld(sx, sy)
+    
+    const endWx = snapEnabled ? snap(wx) : wx
+    const endWy = snapEnabled ? snap(wy) : wy
+    let minX = Math.min(drawRoomStart[0], endWx)
+    let minY = Math.min(drawRoomStart[1], endWy)
+    let w = Math.abs(endWx - drawRoomStart[0])
+    let h = Math.abs(endWy - drawRoomStart[1])
+    
+    const t = 0.2
+    if (w <= t || h <= t) {
+      w = 3
+      h = 3
+      minX = drawRoomStart[0] - w / 2
+      minY = drawRoomStart[1] - h / 2
+      if (snapEnabled) {
+        minX = snap(minX)
+        minY = snap(minY)
+      }
+    }
+    
+    const color = CATALOG['wall'].color
+    const stroke = CATALOG['wall'].stroke
+    plan.elements.push(
+      { id: uid(), type: 'wall', x: minX, y: minY, w, h: t, rotation: 0, color, stroke, label: '' },
+      { id: uid(), type: 'wall', x: minX, y: minY + h - t, w, h: t, rotation: 0, color, stroke, label: '' },
+      { id: uid(), type: 'wall', x: minX, y: minY + t, w: t, h: h - 2 * t, rotation: 0, color, stroke, label: '' },
+      { id: uid(), type: 'wall', x: minX + w - t, y: minY + t, w: t, h: h - 2 * t, rotation: 0, color, stroke, label: '' }
+    )
+    pushHistory()
+    
+    isDrawingRoom = false
+    drawRoomStart = null
+    
+    if (!e.shiftKey) {
+      placingType = null
+      document.querySelectorAll('.palette-item.selected').forEach(el => el.classList.remove('selected'))
+    }
+    canvas.style.cursor = placingType ? 'copy' : 'crosshair'
+    render()
+    return
+  }
+
   if (isDragging || isResizing) {
     pushHistory()
     isDragging = false
@@ -1699,6 +1794,8 @@ function onKeyDown(e: KeyboardEvent) {
       document.querySelectorAll('.palette-item.selected').forEach(el => el.classList.remove('selected'))
       canvas.style.cursor = 'crosshair'
     }
+    isDrawingRoom = false
+    drawRoomStart = null
     selected = null
     updatePropsPanel()
     render()
