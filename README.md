@@ -4,6 +4,8 @@
 
 A modern, high-performance 2D floor plan designer built with **TypeScript**, **Canvas API**, and **Vite**. Create professional-looking architectural layouts with ease using an intuitive drag-and-drop interface.
 
+**[🔗 Access the Live App](https://sirakav.github.io/floor-planner/)**
+
 ---
 
 ## ✨ Features
